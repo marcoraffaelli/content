@@ -575,11 +575,11 @@ def build_report_context(report_summary, upload_data, status, threshold, task_id
         }
 
         if 'FileType' in subject:
-            context['DBotScore']['Indicator'] = subject['md5']
-            context['DBotScore']['Type'] = 'hash'
+            context[outputPaths['dbotscore']]['Indicator'] = subject['md5']
+            context[outputPaths['dbotscore']]['Type'] = 'hash'
             # default threshold for McAfee ATD is 3
             if report_summary['Verdict']['Severity'] > threshold:
-                context['DBotScore']['Score'] = 3
+                context[outputPaths['dbotscore']]['Score'] = 3
                 if subject['Type'] == 'application/url':
                     context['URL(val.Name == obj.Data)'] = {
                         'Type': subject['Type'],
@@ -607,7 +607,7 @@ def build_report_context(report_summary, upload_data, status, threshold, task_id
                         }
                     }
             else:
-                context['DBotScore']['Score'] = 1
+                context[outputPaths['dbotscore']]['Score'] = 1
 
         else:  # detonation did not return any data
             # retrieve submission url by the task ID, if exist
@@ -619,15 +619,15 @@ def build_report_context(report_summary, upload_data, status, threshold, task_id
                 submission = submission_dt
             if isinstance(submission, dict):
                 if submission.get('url') and len(str(submission.get('url'))) > 0:
-                    context['DBotScore']['Type'] = 'application/url'
-                    context['DBotScore']['Indicator'] = submission.get('url')
+                    context[outputPaths['dbotscore']]['Type'] = 'application/url'
+                    context[outputPaths['dbotscore']]['Indicator'] = submission.get('url')
                 else:  # if does not exist, submission is a file
                     if submission.get('SHA256') and len(str(submission.get('SHA256'))) > 0:
-                        context['DBotScore']['Indicator'] = submission.get('SHA256')
-                        context['DBotScore']['Type'] = 'hash'
+                        context[outputPaths['dbotscore']]['Indicator'] = submission.get('SHA256')
+                        context[outputPaths['dbotscore']]['Type'] = 'hash'
                     elif submission.get('SHA1') and len(str(submission.get('SHA1'))) > 0:
-                        context['DBotScore']['Indicator'] = submission.get('SHA1')
-                        context['DBotScore']['Type'] = 'hash'
+                        context[outputPaths['dbotscore']]['Indicator'] = submission.get('SHA1')
+                        context[outputPaths['dbotscore']]['Type'] = 'hash'
 
         context['IP'] = {}
         if 'Ips' in report_summary:

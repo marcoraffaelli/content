@@ -51,7 +51,7 @@ class Client(BaseClient):
             human_readable += f'\n{temp_human_readable}'
             context_entry['Lastline'].append(temp_context_entry.get('Lastline'))
             context_entry['File'].append(temp_context_entry.get('File'))
-            context_entry['DBotScore'].append(temp_context_entry.get('DBotScore'))
+            context_entry[outputPaths['dbotscore']].append(temp_context_entry.get('DBotScore'))
             result.append(temp_result)
             del self.command_params[hash_type]
         return human_readable, context_entry, result
@@ -284,10 +284,10 @@ def get_report_context(result: Dict, threshold=None) -> Dict:
             context_entry[key] = data
 
         if key == 'File' and dbotscore_list[0]['Score'] != 0:
-            context_entry['DBotScore'] = dbotscore_list
+            context_entry[outputPaths['dbotscore']] = dbotscore_list
 
         if key == 'URL' and dbotscore['Score'] != 0:
-            context_entry['DBotScore'] = dbotscore
+            context_entry[outputPaths['dbotscore']] = dbotscore
     return context_entry
 
 

@@ -89,7 +89,7 @@ script: >2-
           'ContentsFormat': formats['text']
       }
       ec = {}
-      ec['DBotScore'] = {
+      ec[outputPaths['dbotscore']] = {
           'Indicator': ssdeep_value,
           'Type': 'ssdeep',
           'Vendor': 'DBot',

@@ -1,6 +1,7 @@
 import Expanse
 import demistomock as demisto
 import json
+from CommonServerPython import outputPaths
 
 TEST_IP = "12.4.49.74"
 TEST_API_KEY = "123456789123456789"
@@ -87,7 +88,7 @@ def test_ip(mocker):
     Expanse.main()
     results = demisto.results.call_args[0]
     assert results[0]['Contents']['search'] == TEST_IP
-    assert results[0]['EntryContext']['DBotScore']['Type'] == 'ip'
+    assert results[0]['EntryContext'][outputPaths['dbotscore']]['Type'] == 'ip'
     assert results[0]['EntryContext']['IP(val.Address == obj.Address)']['Address'] == TEST_IP
     assert results[0]['EntryContext']['IP(val.Address == obj.Address)']['Geo']['Location'] == "41.0433:-81.5239"
 
@@ -111,7 +112,7 @@ def test_domain(mocker):
     Expanse.main()
     results = demisto.results.call_args[0]
     assert results[0]['Contents']['domain'] == TEST_DOMAIN
-    assert results[0]['EntryContext']['DBotScore']['Type'] == 'url'
+    assert results[0]['EntryContext'][outputPaths['dbotscore']]['Type'] == 'url'
     assert results[0]['EntryContext']['Domain(val.Name == obj.Name)']['Name'] == TEST_DOMAIN
 
 

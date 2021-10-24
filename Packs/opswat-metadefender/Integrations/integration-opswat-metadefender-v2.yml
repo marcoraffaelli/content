@@ -195,11 +195,10 @@ script:
                 dbotScore = 1
 
             if is_demisto_version_ge('5.5.0'):
-                ec['DBotScore(val.Indicator && val.Indicator == obj.Indicator && val.Vendor == obj.Vendor && val.Type' \
-                   ' == obj.Type)'] = get_dbot_file_context(file_hash, dbotScore)
+                ec[outputPaths['dbotscore']] = get_dbot_file_context(file_hash, dbotScore)
 
             else:
-                ec['DBotScore'] = get_dbot_file_context(file_hash, dbotScore)
+                ec[outputPaths['dbotscore']] = get_dbot_file_context(file_hash, dbotScore)
 
         else:
             md += f'No results for hash {file_hash}\n'
@@ -286,8 +285,7 @@ script:
 
                 file_md5_hash = file_info['md5']
                 if is_demisto_version_ge('5.5.0'):
-                    ec['DBotScore(val.Indicator && val.Indicator == obj.Indicator && val.Vendor == obj.Vendor && val.Type' \
-                       ' == obj.Type)'] = get_dbot_file_context(file_md5_hash, dbotScore)
+                    ec[outputPaths['dbotscore']] = get_dbot_file_context(file_md5_hash, dbotScore)
 
                 else:
                     ec['DBotScore'] = get_dbot_file_context(file_md5_hash, dbotScore)

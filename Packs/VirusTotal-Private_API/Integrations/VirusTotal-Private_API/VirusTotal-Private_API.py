@@ -126,7 +126,7 @@ def create_file_output(file_hash, threshold, vt_response, short_format):
     md = ''
 
     positives = demisto.get(vt_response, 'positives')
-    ec['DBotScore'] = []
+    ec[outputPaths['dbotscore']] = []
 
     md += '## VirusTotal Hash Reputation for: ' + str(vt_response.get('resource')) + '\n'
     md += 'Scan ID: **' + str(vt_response.get('scan_id')) + '**\n'
@@ -161,8 +161,7 @@ def create_file_output(file_hash, threshold, vt_response, short_format):
     else:
         dbotScore = 1
     if is_demisto_version_ge('5.5.0'):
-        ec['DBotScore(val.Indicator && val.Indicator == obj.Indicator && val.Vendor == obj.Vendor && val.Type'
-           ' == obj.Type)'] = get_dbot_file_context(file_hash, dbotScore)
+        ec[outputPaths['dbotscore']] = get_dbot_file_context(file_hash, dbotScore)
     else:
         ec['DBotScore'] = get_dbot_file_context(file_hash, dbotScore)
 
@@ -262,8 +261,7 @@ def check_file_behaviour_command():
     if response.get('response_code', None) == 0:
 
         if is_demisto_version_ge('5.5.0'):
-            ec['DBotScore(val.Indicator && val.Indicator == obj.Indicator && val.Vendor == obj.Vendor && val.Type'
-               ' == obj.Type)'] = get_dbot_file_context(file_hash, 0)
+            ec[outputPaths['dbotscore']] = get_dbot_file_context(file_hash, 0)
 
         else:
             ec['DBotScore'] = get_dbot_file_context(file_hash, 0)

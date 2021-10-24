@@ -1786,7 +1786,7 @@ def create_entry_context(args, parsed_search_results, dbot_scores):
     if args.get('update_context', "true") == "true":
         ec['Splunk.Result'] = parsed_search_results
         if len(dbot_scores) > 0:
-            ec['DBotScore'] = dbot_scores
+            ec[outputPaths['dbotscore']] = dbot_scores
     return ec
 
 

@@ -168,7 +168,7 @@ def domain_command():
             }
         }
         dbot_score = translate_score(rf_score, DOMAIN_THRESHOLD)
-        ec['DBotScore'] = {
+        ec[outputPaths['dbotscore']] = {
             'Indicator': domain,
             'Type': 'domain',
             'Vendor': 'Recorded Future',
@@ -281,7 +281,7 @@ def url_command():
             }
         }
         dbot_score = translate_score(rf_score, URL_THRESHOLD)
-        ec['DBotScore'] = {
+        ec[outputPaths['dbotscore']] = {
             'Indicator': url,
             'Type': 'url',
             'Vendor': 'Recorded Future',
@@ -394,7 +394,7 @@ def ip_command():
             }
         }
         dbot_score = translate_score(rf_score, IP_THRESHOLD)
-        ec['DBotScore'] = {
+        ec[outputPaths['dbotscore']] = {
             'Indicator': ip,
             'Type': 'ip',
             'Vendor': 'Recorded Future',
@@ -509,7 +509,7 @@ def file_command():
             }
         }
         dbot_score = translate_score(rf_score, FILE_THRESHOLD)
-        ec['DBotScore'] = {
+        ec[outputPaths['dbotscore']] = {
             'Indicator': file,
             'Type': 'file',
             'Vendor': 'Recorded Future',
@@ -765,7 +765,7 @@ def hashlist_command():
             }
         }
         dbot_score = translate_score(rf_score, FILE_THRESHOLD)
-        ec['DBotScore'] = {
+        ec[outputPaths['dbotscore']] = {
             'Indicator': file,
             'Type': 'file',
             'Vendor': 'Recorded Future',
@@ -876,7 +876,7 @@ def iplist_command():
             }
         }
         dbot_score = translate_score(rf_score, IP_THRESHOLD)
-        ec['DBotScore'] = {
+        ec[outputPaths['dbotscore']] = {
             'Indicator': ip,
             'Type': 'ip',
             'Vendor': 'Recorded Future',
@@ -985,7 +985,7 @@ def domainlist_command():
             }
         }
         dbot_score = translate_score(rf_score, DOMAIN_THRESHOLD)
-        ec['DBotScore'] = {
+        ec[outputPaths['dbotscore']] = {
             'Indicator': domain,
             'Type': 'domain',
             'Vendor': 'Recorded Future',
@@ -1095,7 +1095,7 @@ def urllist_command():
             }
         }
         dbot_score = translate_score(rf_score, URL_THRESHOLD)
-        ec['DBotScore'] = {
+        ec[outputPaths['dbotscore']] = {
             'Indicator': url,
             'Type': 'url',
             'Vendor': 'Recorded Future',

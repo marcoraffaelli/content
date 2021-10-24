@@ -1,6 +1,6 @@
 import demistomock as demisto
 import CheckPhish
-from CommonServerPython import DBotScoreReliability
+from CommonServerPython import outputPaths, DBotScoreReliability
 
 RESULTS = {
     'status': 'DONE',
@@ -31,8 +31,8 @@ def test_reliability_in_get_result_checkphish(requests_mock, mocker):
                                      DBotScoreReliability.B)
 
     assert demisto.results.call_args_list[0][0][0]['Contents'] == RESULTS
-    assert demisto.results.call_args_list[0][0][0]['EntryContext']['DBotScore']['Reliability'] == DBotScoreReliability.B
-    assert demisto.results.call_args_list[0][0][0]['EntryContext']['DBotScore']['Score'] == 3
+    assert demisto.results.call_args_list[0][0][0]['EntryContext'][outputPaths['dbotscore']]['Reliability'] == DBotScoreReliability.B
+    assert demisto.results.call_args_list[0][0][0]['EntryContext'][outputPaths['dbotscore']]['Score'] == 3
 
 
 def test_bad_disp_param(requests_mock, mocker):
@@ -54,4 +54,4 @@ def test_bad_disp_param(requests_mock, mocker):
                                      DBotScoreReliability.B)
 
     assert demisto.results.call_args_list[0][0][0]['Contents'] == RESULTS
-    assert demisto.results.call_args_list[0][0][0]['EntryContext']['DBotScore']['Score'] == 0
+    assert demisto.results.call_args_list[0][0][0]['EntryContext'][outputPaths['dbotscore']]['Score'] == 0

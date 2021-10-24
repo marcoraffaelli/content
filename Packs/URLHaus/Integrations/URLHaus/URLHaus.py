@@ -172,7 +172,7 @@ def url_command(**kwargs):
         dbot_score, description = calculate_dbot_score(url_information.get('blacklists', {}),
                                                        kwargs.get('threshold'), COMPROMISED_IS_MALICIOUS)
 
-        ec['DBotScore']['Score'] = dbot_score
+        ec[outputPaths['dbotscore']]['Score'] = dbot_score
         if dbot_score == 3:
             ec['URL']['Malicious'] = {
                 'Vendor': 'URLhaus',
@@ -192,7 +192,7 @@ def url_command(**kwargs):
                                          })
 
     elif url_information['query_status'] == 'no_results':
-        ec['DBotScore']['Score'] = 0
+        ec[outputPaths['dbotscore']]['Score'] = 0
 
         human_readable = f'## URLhaus reputation for {url}\n' \
             f'No results!'
@@ -249,7 +249,7 @@ def domain_command(**kwargs):
             dbot_score, description = calculate_dbot_score(domain_information.get('blacklists', {}),
                                                            kwargs.get('threshold'), COMPROMISED_IS_MALICIOUS)
 
-            ec['DBotScore']['Score'] = dbot_score
+            ec[outputPaths['dbotscore']]['Score'] = dbot_score
             if dbot_score == 3:
                 ec['domain']['Malicious'] = {
                     'Vendor': 'URLhaus',
@@ -273,7 +273,7 @@ def domain_command(**kwargs):
                 'EntryContext': ec
             })
         elif domain_information['query_status'] == 'no_results':
-            ec['DBotScore']['Score'] = 0
+            ec[outputPaths['dbotscore']]['Score'] = 0
 
             human_readable = f'## URLhaus reputation for {domain}\n' \
                 f'No results!'

@@ -1,6 +1,6 @@
 import demistomock as demisto
 import importlib
-from CommonServerPython import DBotScoreReliability
+from CommonServerPython import outputPaths, DBotScoreReliability
 
 Cisco_umbrella_investigate = importlib.import_module('Cisco-umbrella-investigate')
 
@@ -26,4 +26,4 @@ def test_reliability_in_get_domain_security_command(mocker):
 
     results = Cisco_umbrella_investigate.get_domain_security_command()
 
-    assert results[0]['EntryContext']['DBotScore']['Reliability'] == 'B - Usually reliable'
+    assert results[0]['EntryContext'][outputPaths['dbotscore']]['Reliability'] == 'B - Usually reliable'

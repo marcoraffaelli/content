@@ -768,7 +768,7 @@ def search_by_id_command():
     if obj_type == 'indicator':
         indicator_type = TQ_TO_DEMISTO_INDICATOR_TYPES.get(data['Type'])
         if indicator_type is not None:
-            ec['DBotScore'] = create_dbot_context(data['Value'], indicator_type, data.get('TQScore', -1))
+            outputPaths['dbotscore'] = create_dbot_context(data['Value'], indicator_type, data.get('TQScore', -1))
 
     readable_title = 'Search results for {0} with ID {1}'.format(obj_type, obj_id)
     readable = build_readable(readable_title, obj_type, data)

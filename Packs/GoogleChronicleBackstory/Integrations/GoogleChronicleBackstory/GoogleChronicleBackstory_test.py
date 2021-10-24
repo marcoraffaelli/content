@@ -5,6 +5,7 @@ import pytest
 from httplib2 import Response
 
 import demistomock as demisto
+from CommonServerPython import ouputPaths
 
 PROXY_MOCK = {
     "proxy": "0.0.0.0"
@@ -822,7 +823,7 @@ def test_ip_command_success(mocker, client):
 
     hr, ec, response = ip_command(client, ARGS['ip'])
 
-    assert ec['DBotScore'] == dummy_ec['DBotScore']
+    assert ec[outputPaths['dbotscore']] == dummy_ec[outputPaths['dbotscore']]
     assert ec['IP(val.Address && val.Address == obj.Address)'] == dummy_ec[
         'IP(val.Address && val.Address == obj.Address)']
 
@@ -953,7 +954,7 @@ def test_domain_command_success(mocker, client):
 
     hr, ec, response = domain_command(client, ARGS['domain'])
 
-    assert ec['DBotScore'] == dummy_ec['DBotScore']
+    assert ec[outputPaths['dbotscore']] == dummy_ec[outputPaths['dbotscore']]
     assert ec['Domain(val.Name && val.Name == obj.Name)'] == dummy_ec['Domain(val.Name && val.Name == obj.Name)']
 
     key = 'GoogleChronicleBackstory.Domain(val.IoCQueried && val.IoCQueried == obj.IoCQueried)'
