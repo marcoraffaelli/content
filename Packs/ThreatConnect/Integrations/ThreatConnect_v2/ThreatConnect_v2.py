@@ -1,5 +1,9 @@
+from typing import NamedTuple
+
 import demistomock as demisto  # noqa: F401
 from CommonServerPython import *  # noqa: F401
+
+TC_INDICATOR_CONTEXT_PATH = 'TC.Indicator(val.ID && val.ID === obj.ID)'
 
 ''' IMPORTS '''
 import copy
@@ -50,32 +54,65 @@ def calculate_freshness_time(freshness):
     return t.strftime('%Y-%m-%dT00:00:00Z')
 
 
-def create_context(indicators, include_dbot_score=False):
-    indicators_dbot_score = {}  # type: dict
+class ThreatConnectIPIndicator(Common.IP):
+    """ used for create_context, adding the data at Malicious, preserving BC """
+
+    def to_context(self):
+        context = super().to_context()
+        context['Malicious']['Address'] = context['Address']
+        return context
+
+
+class ThreatConnectFileIndicator(Common.File):
+    """ used for create_context, adding the data at Malicious, preserving BC """
+
+    def to_context(self):
+        context = super().to_context()
+        for k in ['SHA1', 'SHA256', 'MD5']:
+            value = context.get(k)
+            if value is not None:
+                context['Malicious'][k] = value
+        return context
+
+
+class ThreatConnectURLIndicator(Common.URL):
+    """ used for create_context, adding the data at Malicious, preserving BC """
+
+    def to_context(self):
+        context = super().to_context()
+        context['Malicious']['Name'] = context['Name']
+        return context
+
+
+class ThreatConnectDomainIndicator(Common.Domain):
+    # todo put in a separate file?
+    """ used for create_context, adding the data at Malicious, preserving BC """
+
+    def to_context(self):
+        context = super().to_context()
+        context['Malicious']['Name'] = context['Name']
+        return context
+
+
+def create_context(indicators, include_dbot_score=False):  # todo is it okay to always return DBotScore?
     params = demisto.params()
     rating_threshold = int(params.get('rating', '3'))
     confidence_threshold = int(params.get('confidence', '3'))
-    context = {
-        'DBotScore': [],
-        outputPaths['ip']: [],
-        outputPaths['url']: [],
-        outputPaths['domain']: [],
-        outputPaths['file']: [],
-        'TC.Indicator(val.ID && val.ID === obj.ID)': [],
-    }  # type: dict
-    tc_type_to_demisto_type = {
-        'Address': 'ip',
-        'URL': 'url',
-        'Host': 'domain',
-        'File': 'file'
-    }
-    type_to_value_field = {
-        'Address': 'ip',
-        'URL': 'text',
-        'Host': 'hostName',
-        'File': 'md5'
-    }
+    command_results: List[CommandResults] = []
+    tc_type_to_demisto_type = {'Address': 'ip', 'URL': 'url', 'Host': 'domain', 'File': 'file'}
+    type_to_value_field = {'Address': 'ip', 'URL': 'text', 'Host': 'hostName', 'File': 'md5'}
 
+    value_to_score = dict()
+    parsed_demisto_indicator = NamedTuple('ParsedIndicator', (('value', str),
+                                                              ('indicator_type', DBotScoreType),
+                                                              ('confidence', Optional[int]),
+                                                              ('rating', Optional[int]),
+                                                              ('body', dict)))
+    parsed_demisto_indicators: List[parsed_demisto_indicator] = []
+    parsed_tc_indicators: List[dict] = []
+
+    # populates parsed_indicator_data with the basic details of every indicator, together with its raw data
+    # and updates value_to_score with the max rank per value
     for ind in indicators:
         indicator_type = tc_type_to_demisto_type.get(ind['type'], ind['type'])
         value_field = type_to_value_field.get(ind['type'], 'summary')
@@ -94,54 +131,33 @@ def create_context(indicators, include_dbot_score=False):
             rating = int(ind.get('threatAssessRating', 0))
 
         if confidence >= confidence_threshold and rating >= rating_threshold:
-            dbot_score = 3
-            desc = ''
-            if hasattr(ind, 'description'):
-                desc = ind.description
-            mal = {
-                'Malicious': {
-                    'Vendor': 'ThreatConnect',
-                    'Description': desc,
-                }
-            }
-            if indicator_type == 'ip':
-                mal['Address'] = value
-
-            elif indicator_type == 'file':
-                mal['MD5'] = value
-                mal['SHA1'] = ind.get('sha1')
-                mal['SHA256'] = ind.get('sha256')
-
-            elif indicator_type == 'url':
-                mal['Data'] = value
-
-            elif indicator_type == 'domain':
-                mal['Name'] = value
-
-            context_path = outputPaths.get(indicator_type)
-            if context_path is not None:
-                context[context_path].append(mal)
+            curr_score = Common.DBotScore.BAD
         # if both confidence and rating values are less than the threshold - DBOT score is unknown
         elif confidence < confidence_threshold and rating < rating_threshold:
-            dbot_score = 0
+            curr_score = Common.DBotScore.NONE
         else:
-            dbot_score = 2
+            curr_score = Common.DBotScore.SUSPICIOUS
 
-        # if there is more than one indicator results - take the one with the highest score
-        if include_dbot_score:
-            old_val = indicators_dbot_score.get(value)
-            if old_val and old_val['Score'] < dbot_score:
-                indicators_dbot_score[value]['Score'] = dbot_score
-            else:
-                indicators_dbot_score[value] = {
-                    'Indicator': value,
-                    'Score': dbot_score,
-                    'Type': indicator_type,
-                    'Vendor': 'ThreatConnect'
-                }
-            indicators_dbot_score[value]['Reliability'] = RELIABILITY
+        value_to_score[value] = max(curr_score,
+                                    value_to_score.get(value, Common.DBotScore.NONE))  # todo SUSPICIOUS as default?
+        parsed_demisto_indicators.append(parsed_demisto_indicator(value, indicator_type, confidence, rating, ind))
 
-        context['TC.Indicator(val.ID && val.ID === obj.ID)'].append({
+    # creating dbot scores using the maximal score of each value
+    value_to_dbot_score = {
+        value: Common.DBotScore(indicator=value,
+                                indicator_type=indicator_type,
+                                score=value_to_score[value],
+                                reliability=RELIABILITY,
+                                malicious_description=ind.get('description', '')
+                                if value_to_score[value] == Common.DBotScore.BAD else None)
+        for value, indicator_type, _, _, ind in parsed_demisto_indicators
+    }
+
+    for value, indicator_type, confidence, rating, ind in parsed_demisto_indicators:
+        dbot_score = value_to_dbot_score[value]
+        sha1 = ind.get('sha1')
+        sha256 = ind.get('sha256')
+        tc_indicator = {
             'ID': ind['id'],
             'Name': value,
             'Type': ind['type'],
@@ -158,36 +174,36 @@ def create_context(indicators, include_dbot_score=False):
 
             # relevant for file
             'File.MD5': ind.get('md5'),
-            'File.SHA1': ind.get('sha1'),
-            'File.SHA256': ind.get('sha256'),
-        })
+            'File.SHA1': sha1,
+            'File.SHA256': sha256,
+        }
 
-        if 'group_associations' in ind:
-            if ind['group_associations']:
-                context['TC.Indicator(val.ID && val.ID === obj.ID)'][0]['IndicatorGroups'] = ind['group_associations']
+        # adds non-None values of the following
+        tc_indicator.update({k: v for k, v in {'IndicatorGroups': ind.get('group_associations'),
+                                               'IndicatorAssociations': ind.get('indicator_associations'),
+                                               'IndicatorTags': ind.get('indicator_tags'),
+                                               'IndicatorsObservations': ind.get('indicator_observations'),
+                                               'IndicatorAttributes': ind.get('indicator_attributes')}
+                            .items() if v is not None})
 
-        if 'indicator_associations' in ind:
-            if ind['indicator_associations']:
-                context['TC.Indicator(val.ID && val.ID === obj.ID)'][0]['IndicatorAssociations'] = ind[
-                    'indicator_associations']
+        indicator = None  # default # todo use? or else after if?
+        if indicator_type == 'ip':
+            indicator = ThreatConnectIPIndicator(ip=value, dbot_score=dbot_score)
+        elif indicator_type == 'file':
+            indicator = ThreatConnectFileIndicator(dbot_score=dbot_score, md5=value, sha1=sha1, sha256=sha256)
+        elif indicator_type == 'url':
+            indicator = ThreatConnectURLIndicator(url=value, dbot_score=dbot_score)
+        elif indicator_type == 'domain':
+            indicator = ThreatConnectDomainIndicator(domain=value, dbot_score=dbot_score)
+        # todo else?
 
-        if 'indicator_tags' in ind:
-            if ind['indicator_tags']:
-                context['TC.Indicator(val.ID && val.ID === obj.ID)'][0]['IndicatorTags'] = ind['indicator_tags']
+        command_results.append(CommandResults(indicator=indicator,
+                                              outputs={TC_INDICATOR_CONTEXT_PATH: tc_indicator}))
+        parsed_tc_indicators.append(tc_indicator)  # preserving BC
 
-        if 'indicator_observations' in ind:
-            if ind['indicator_observations']:
-                context['TC.Indicator(val.ID && val.ID === obj.ID)'][0]['IndicatorsObservations'] = ind[
-                    'indicator_observations']
-
-        if 'indicator_attributes' in ind:
-            if ind['indicator_attributes']:
-                context['TC.Indicator(val.ID && val.ID === obj.ID)'][0]['IndicatorAttributes'] = ind[
-                    'indicator_attributes']
-
-    context['DBotScore'] = list(indicators_dbot_score.values())
-    context = {k: createContext(v, removeNull=True)[:MAX_CONTEXT] for k, v in context.items() if v}
-    return context, context.get('TC.Indicator(val.ID && val.ID === obj.ID)', [])
+    # context = {k: createContext(v, removeNull=True)[:MAX_CONTEXT] for k, v in context.items() if v}
+    # return context, context.get(TC_INDICATOR_CONTEXT_PATH, [])
+    return_results(command_results), parsed_tc_indicators
 
 
 def get_xindapi(tc, indicator_value, indicator_type, owner):
