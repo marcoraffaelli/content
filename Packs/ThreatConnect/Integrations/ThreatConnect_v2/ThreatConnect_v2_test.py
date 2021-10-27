@@ -281,7 +281,7 @@ def test_create_context_debotscore(params, rate, expected_score, mocker):
     indicator = deepcopy(IP_INDICATOR)
     indicator[0]['rating'] = float(rate)
     mocker.patch.object(demisto, 'params', return_value=params)
-    output = create_context(indicator, True)[0].get('DBotScore', [{}])[0]
+    output = create_context(indicator)[0].get('DBotScore', [{}])[0]
     assert output == expected_output, f'expected_output({indicator}, True)[0].get(\'DBotScore\')\n\treturns: {output}' \
                                       f'\n\tinstead: {expected_output}'
 
@@ -317,7 +317,7 @@ def test_create_context_debotscore_samilar_indicator(mocker):
                                                          "freshness": 7, "rating": 0, "confidence": 50})
 
     # passing 2 ip indicators with the same address, one of them should gets the score 2 and the second one the score 3
-    context, _ = create_context(indicator, True)
+    context, _ = create_context(indicator)
     # validate there is one indicator with the highest score - 3
     assert context
     assert len(context['DBotScore']) == 1
