@@ -1,3 +1,4 @@
+
 Guardicore delivers easy-to-use Zero Trust network segmentation to security practitioners
 across the globe. Our mission is to minimize the effects of high-impact breaches, like
 ransomware, while protecting the critical assets at the heart of your network. We shut 
